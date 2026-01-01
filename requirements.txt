@@ -1,3 +1,4 @@
+
 fastapi
 uvicorn[standard]
 pydantic[email]
@@ -5,3 +6,5 @@ python-dotenv
 websockets
 httpx
 jinja2
+aiofiles
+python-multipart
